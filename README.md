@@ -16,12 +16,12 @@ For dev Environment
 $ npm run dev
 ```
 
-nnavigate to
+navigate to
 
 http://localhost:3000/
 
-in the browser
-Upload your pdf 
+In the browser Upload your pdf in the prompt.
 
-Currently open console to see the links
-Working on UI
+Currently open console to see the links . UI in development
+
+
