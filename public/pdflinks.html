@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>PDF Link Extractor</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.8.162/pdf.min.js"
+    integrity="sha512-9Wd08apcJEwm8g3lBTg1UW/njdN0iuuOVWKpyinK3uA7ISAE5PmEZ4y8bZYTXVOE3tlt7aFlCBBLmLt5cUxe2Q=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.8.162/pdf.worker.min.js"
+    integrity="sha512-kYruxZBxGQJy6pFwz9JVe6FCgCZEPPvxC3eoy4A+fCMWcSGqPxxGC7M1S6eyXCBfm/4d7l4cf8XNoULZQQ+MtQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+</head>
+
+<body>
+  <h1>PDF Link Extractor</h1>
+  <p>Select a PDF file to extract links from it (selected file will be analyzed in the browser itself and will not be
+    sent to any server).</p>
+  <input type="file" id="file" name="file" accept="application/pdf" />
+  <br />
+  <input type="checkbox" id="txtlink" />
+  <label for="txtlink">Extract links from plain text (can have false positives)</label>
+  <div id="status"></div>
+  <div id="output">Waiting for a PDF file...</div>
+  <div id="wbmurl"></div>
+
+  <!-- <script src="extractLinks.js"></script> -->
+  <script src="myExtractor.js"></script>
+</body>
+
+</html>
