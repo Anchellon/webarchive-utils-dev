@@ -36,14 +36,11 @@ const convertToParsableIR = async (data) => {
     return pageText;
 };
 const getLinksFromParseableIR = (textIR) => {
-    console.log(textIR);
-
     let links = textIR
         .split(" ")
         .filter((l) => l && (l.match(new RegExp(".*`.*")) || l.match(linkRe)))
         .filter((l) => l && l.match(linkRe))
         .map((l) => {
-            console.log(l);
             // Find first `
             let firstIx = l.indexOf("`");
             // Find Last `
@@ -58,10 +55,9 @@ const getLinksFromParseableIR = (textIR) => {
 };
 const fileSelectHandler = async (e) => {
     const f = e.target.files[0];
-    console.log(f);
     if (f.type != "application/pdf") {
         output.innerText = "Please select a PDF file!";
-        console.log("im breaking");
+
         return;
     }
     output.innerText = "Processing PDF...";
@@ -76,7 +72,7 @@ const fileSelectHandler = async (e) => {
     reader.readAsArrayBuffer(f);
     reader.onload = async () => {
         // const file = new Uint8Array(reader.result);
-        console.log(reader.result);
+
         let parseableText = await convertToParsableIR(
             new Uint8Array(reader.result)
         );
