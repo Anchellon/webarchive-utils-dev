@@ -12,15 +12,18 @@ const linkRe = new RegExp("https?://[^\\s'\"><]+\\.[^\\s'\"><]+", "ig");
 // right now the edge cases still to be solved are
 // 1. the link is broken into multiple lines
 // (easy fix -> // Find first ` and last `  then  remove any other ` in between these two array indexes)
-
-const convertToParsableIR = async (data) => {
-    let links = new Set();
+const getLinksFromPdf = async (data) => {
     const pdf = await pdfjsLib.getDocument(data).promise;
-    // for (let i = 1; i <= pdf.numPages; i++) {
-    // let page = await pdf.getPage(i);
-    // Currently works on a signle page
-    // add a for loop if you want to scan entire pdf
-    let page = await pdf.getPage(2);
+    let links = [];
+    for (let i = 1; i <= 1; i++) {
+        let page = await pdf.getPage(i);
+        let parseableText = await convertToParsableIR(page);
+        links.push(getLinksFromParseableIR(parseableText));
+    }
+    return links;
+};
+
+const convertToParsableIR = async (page) => {
     const tokenizedText = await page.getTextContent();
 
     const pageText = tokenizedText.items
@@ -42,13 +45,28 @@ const getLinksFromParseableIR = (textIR) => {
         .filter((l) => l && l.match(linkRe))
         .map((l) => {
             // Find first `
+            let count = (l.match(/`/g) || []).length;
             let firstIx = l.indexOf("`");
             // Find Last `
             let lastIx = l.lastIndexOf("`");
+
             // Take substring
-            l = l.substring(firstIx + 1, lastIx);
-            // Remove any `
-            l = l.replaceAll("`", "");
+            if (count > 0) {
+                if (firstIx != lastIx) {
+                    if (count > 2) {
+                        l.replaceAll("`", "");
+                    }
+                    l = l.substring(firstIx + 1, lastIx);
+                } else {
+                    let parts = l.split("`");
+                    if (parts[0].match(linkRe)) {
+                        l = parts[0];
+                    } else {
+                        l = parts[1];
+                    }
+                }
+            }
+
             return l;
         });
     return links;
@@ -73,10 +91,7 @@ const fileSelectHandler = async (e) => {
     reader.onload = async () => {
         // const file = new Uint8Array(reader.result);
 
-        let parseableText = await convertToParsableIR(
-            new Uint8Array(reader.result)
-        );
-        let links = getLinksFromParseableIR(parseableText);
+        let links = getLinksFromPdf(new Uint8Array(reader.result));
         console.log(links);
     };
 };
