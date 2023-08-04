@@ -15,7 +15,7 @@ const linkRe = new RegExp("https?://[^\\s'\"><]+\\.[^\\s'\"><]+", "ig");
 const getLinksFromPdf = async (data) => {
     const pdf = await pdfjsLib.getDocument(data).promise;
     let links = [];
-    for (let i = 1; i <= 1; i++) {
+    for (let i = 1; i <= 5; i++) {
         let page = await pdf.getPage(i);
         let parseableText = await convertToParsableIR(page);
         links.push(getLinksFromParseableIR(parseableText));
@@ -44,29 +44,23 @@ const getLinksFromParseableIR = (textIR) => {
         .filter((l) => l && (l.match(new RegExp(".*`.*")) || l.match(linkRe)))
         .filter((l) => l && l.match(linkRe))
         .map((l) => {
-            // Find first `
             let count = (l.match(/`/g) || []).length;
-            let firstIx = l.indexOf("`");
-            // Find Last `
+            let firstIx = l.match("https?://[^\\s'\"><]+\\.[^\\s'\"><]+").index; //7
+            let firstIxSpl = l.indexOf("`"); //6
             let lastIx = l.lastIndexOf("`");
-
-            // Take substring
-            if (count > 0) {
-                if (firstIx != lastIx) {
-                    if (count > 2) {
-                        l.replaceAll("`", "");
-                    }
-                    l = l.substring(firstIx + 1, lastIx);
-                } else {
-                    let parts = l.split("`");
-                    if (parts[0].match(linkRe)) {
-                        l = parts[0];
-                    } else {
-                        l = parts[1];
-                    }
+            if (count >= 2) {
+                if (lastIx != -1) {
+                    l = l.substring(firstIx, lastIx);
                 }
             }
-
+            if (count == 1) {
+                if (firstIx > firstIxSpl) {
+                    l = l.substring(firstIx, l.length);
+                } else {
+                    l = l.substring(firstIx, firstIxSpl);
+                }
+            }
+            l = l.replaceAll("`", "");
             return l;
         });
     return links;
