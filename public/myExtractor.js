@@ -1,6 +1,6 @@
 const input = document.getElementById("file");
 const txtlink = document.getElementById("txtlink");
-const status = document.getElementById("status");
+const stat = document.getElementById("status");
 const output = document.getElementById("output");
 const wbmurl = document.getElementById("wbmurl");
 const linkRe = new RegExp("https?://[^\\s'\"><]+\\.[^\\s'\"><]+", "ig");
@@ -9,23 +9,26 @@ const linkRe = new RegExp("https?://[^\\s'\"><]+\\.[^\\s'\"><]+", "ig");
 // write a regex that handles the appearnce of the above tag in a http string
 // https://github.com/metachris/pdfx/blob/master/pdfx/extractor.py Using this file as a base ref
 
-// right now the edge cases still to be solved are
-// 1. the link is broken into multiple lines
-// (easy fix -> // Find first ` and last `  then  remove any other ` in between these two array indexes)
+const countLinks = (text) => {
+    return (text.match(/http/g) || []).length;
+};
+
 const getLinksFromPdf = async (data) => {
     const pdf = await pdfjsLib.getDocument(data).promise;
     let links = [];
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 6; i <= 6; i++) {
         let page = await pdf.getPage(i);
         let parseableText = await convertToParsableIR(page);
+
         links.push(getLinksFromParseableIR(parseableText));
     }
+    console.log(links);
     return links;
 };
 
 const convertToParsableIR = async (page) => {
     const tokenizedText = await page.getTextContent();
-
+    console.log(tokenizedText);
     const pageText = tokenizedText.items
         .map((token) => {
             if (token.hasEOL) {
@@ -39,30 +42,42 @@ const convertToParsableIR = async (page) => {
     return pageText;
 };
 const getLinksFromParseableIR = (textIR) => {
-    let links = textIR
-        .split(" ")
-        .filter((l) => l && (l.match(new RegExp(".*`.*")) || l.match(linkRe)))
-        .filter((l) => l && l.match(linkRe))
-        .map((l) => {
-            let count = (l.match(/`/g) || []).length;
-            let firstIx = l.match("https?://[^\\s'\"><]+\\.[^\\s'\"><]+").index; //7
-            let firstIxSpl = l.indexOf("`"); //6
-            let lastIx = l.lastIndexOf("`");
-            if (count >= 2) {
-                if (lastIx != -1) {
-                    l = l.substring(firstIx, lastIx);
-                }
-            }
-            if (count == 1) {
-                if (firstIx > firstIxSpl) {
-                    l = l.substring(firstIx, l.length);
-                } else {
-                    l = l.substring(firstIx, firstIxSpl);
-                }
-            }
-            l = l.replaceAll("`", "");
-            return l;
-        });
+    console.log(textIR);
+    let links = linkify.find(textIR).map((l) => l.value);
+    console.log(links);
+    links = links.map((l) => {
+        let lastIx = l.lastIndexOf("`");
+        console.log(l);
+        let count = (l.match(/`/g) || []).length;
+        if (count >= 2) l = l.substring(0, lastIx);
+        l = l.replaceAll("`", "");
+        console.log(l);
+        return l;
+    });
+    // let links = textIR
+    //     .split(" ")
+    //     .filter((l) => l && (l.match(new RegExp(".*`.*")) || l.match(linkRe)))
+    //     .filter((l) => l && l.match(linkRe))
+    //     .map((l) => {
+    //         let count = (l.match(/`/g) || []).length;
+    //         let firstIx = l.match("https?://[^\\s'\"><]+\\.[^\\s'\"><]+").index; //7
+    //         let firstIxSpl = l.indexOf("`"); //6
+    //         let lastIx = l.lastIndexOf("`");
+    //         if (count >= 2) {
+    //             if (lastIx != -1) {
+    //                 l = l.substring(firstIx, lastIx);
+    //             }
+    //         }
+    //         if (count == 1) {
+    //             if (firstIx > firstIxSpl) {
+    //                 l = l.substring(firstIx, l.length);
+    //             } else {
+    //                 l = l.substring(firstIx, firstIxSpl);
+    //             }
+    //         }
+    //         l = l.replaceAll("`", "");
+    //         return l;
+    //     });
     return links;
 };
 const fileSelectHandler = async (e) => {
@@ -84,9 +99,27 @@ const fileSelectHandler = async (e) => {
     reader.readAsArrayBuffer(f);
     reader.onload = async () => {
         // const file = new Uint8Array(reader.result);
+        // console.log(reader.result);
+        let linksCategorizedBypage = await getLinksFromPdf(
+            new Uint8Array(reader.result)
+        );
+        console.log(linksCategorizedBypage);
+        // stat.innerText = `File Name: ${f.name}\nTotal Unique Links: ${links.length}\nWayback Machine Links: ${wbmlinks.length}\nNon-WBM Links: ${otrlinks.length}`;
+        // let totalLinks = 0;
+        // let wbmLinksCtr = 0;
 
-        let links = getLinksFromPdf(new Uint8Array(reader.result));
-        console.log(links);
+        linksCategorizedBypage.forEach((links, index) => {
+            // console.log(links);
+            // totalLinks = totalLinks + links.length;
+            let wbmlinks = links.filter((l) => l.includes("web.archive.org"));
+            // wbmLinksCtr = wbmlinks.length + wbmLinksCtr;
+            let otrlinks = links.filter((l) => !l.includes("web.archive.org"));
+
+            output.innerText += otrlinks.join("\n");
+            wbmurl.innerText += wbmlinks.join("\n");
+            output.innerText += "\n";
+        });
+        // stat.innerText = `File Name: ${f.name}\nTotal Unique Links: ${totalLinks}\nWayback Machine Links: ${wbmlinks.length}\nNon-WBM Links: ${otrlinks.length}`;
     };
 };
 input.addEventListener("change", fileSelectHandler, false);
